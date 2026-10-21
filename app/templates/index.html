@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TubeClone AI - Automated YouTube Channel Cloning & Niche OS</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="min-h-screen bg-[#0b0f19] text-gray-100 flex flex-col justify-between selection:bg-purple-500 selection:text-white">
+
+    <!-- Navbar -->
+    <header class="glass-nav sticky top-0 z-40 px-4 lg:px-8 py-3.5">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
+                    <i class="fa-solid fa-bolt text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold gradient-text tracking-wide">TubeClone AI</h1>
+                    <p class="text-[11px] text-gray-400 font-medium">Channel Cloning & Niche Operating System</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- API Key Status Badge -->
+                <div id="api-key-badge" onclick="toggleModal('api-key-modal', true)" class="px-3 py-1.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5 cursor-pointer hover:bg-amber-500/20 transition-all">
+                    <i class="fa-solid fa-key"></i> <span id="badge-text">Set API Key</span>
+                </div>
+
+                <button onclick="toggleModal('api-key-modal', true)" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 rounded-lg border border-purple-500/20 transition-all">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Hero Banner -->
+        <div class="text-center space-y-3">
+            <span class="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <i class="fa-solid fa-microchip"></i> Powered by DeepSeek V3 AI & Google Gemini
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-tight">
+                Model Any Channel or <br>
+                <span class="gradient-text">Discover Unsaturated Niches.</span>
+            </h2>
+            <p class="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                Paste any YouTube Channel URL or discover high-CPM, low-competition niches below. Automatically builds your channel setup, writes a full teleprompter script, generates beat-by-beat prompts, and exports to Word (.docx)!
+            </p>
+            <div class="pt-2">
+                <button id="explore-niches-btn" onclick="toggleNicheExplorer()" class="px-4 py-2 bg-gradient-to-r from-amber-500/20 to-purple-500/20 border border-amber-500/30 text-amber-300 hover:text-white font-semibold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 mx-auto cursor-pointer">
+                    <i class="fa-solid fa-fire text-amber-400"></i> Explore High-CPM Unsaturated Niches
+                </button>
+            </div>
+        </div>
+
+        <!-- Trending Unsaturated Niches Container (VISIBLE BY DEFAULT) -->
+        <div id="niche-explorer-section" class="glass-card rounded-2xl p-6 border border-amber-500/30 space-y-4">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-base font-bold text-amber-300 flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-amber-400"></i> Dynamic Niche & Channel Discovery Engine
+                    </h3>
+                    <p class="text-xs text-gray-400">Real-time high-CPM, low-competition YouTube niches and top channel handles to clone.</p>
+                </div>
+            </div>
+
+            <!-- Search Bar for Any Custom Niche -->
+            <div class="relative flex items-center">
+                <input type="text" id="niche-search-input" placeholder="Type any keyword (e.g. 'AI Storytelling', 'Crypto', 'Real Estate', 'Horror', 'B2B Marketing')..."
+                       class="w-full pl-10 pr-24 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-amber-500">
+                <div class="absolute left-3 text-gray-400 text-xs">
+                    <i class="fa-solid fa-magnifying-glass text-amber-400"></i>
+                </div>
+                <button onclick="searchCustomNiche()" class="absolute right-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs rounded-lg transition-colors">
+                    Discover
+                </button>
+            </div>
+
+            <!-- Dynamic Category Filter Pills -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-gray-800">
+                <button onclick="switchNicheCategory('AI Storytelling & Dark Folklore')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap">
+                    📜 AI Storytelling
+                </button>
+                <button onclick="switchNicheCategory('Faceless AI Video & Automation')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap">
+                    🎬 Faceless AI Videos
+                </button>
+                <button onclick="switchNicheCategory('Finance & Wealth')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                    💰 Finance & Wealth
+                </button>
+                <button onclick="switchNicheCategory('AI & Technology')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap">
+                    🤖 AI & Tech
+                </button>
+                <button onclick="switchNicheCategory('Psychology & Human Habits')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap">
+                    🧠 Psychology & Mindset
+                </button>
+                <button onclick="switchNicheCategory('Health & Biohacking')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap">
+                    🧬 Health & Longevity
+                </button>
+                <button onclick="switchNicheCategory('History & Mystery')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap">
+                    🏛️ History & Mystery
+                </button>
+                <button onclick="switchNicheCategory('True Crime & Cyber')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap">
+                    🕵️ True Crime & Cyber
+                </button>
+                <button onclick="switchNicheCategory('Real Estate & Cashflow')" class="niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap">
+                    🏢 Real Estate
+                </button>
+            </div>
+
+            <div id="niche-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2"></div>
+        </div>
+
+        <!-- Analyzer Input Form Card -->
+        <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-2xl border border-gray-800 relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-60 h-60 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <form id="analyze-form" class="space-y-6 relative z-10">
+                <!-- URL Input -->
+                <div class="space-y-2">
+                    <label for="youtube-url" class="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                        Channel URL or Video Link (e.g. https://youtube.com/@ChannelName) <span class="text-purple-400">*</span>
+                    </label>
+                    <div class="relative flex items-center">
+                        <div class="absolute left-4 text-gray-400">
+                            <i class="fa-solid fa-layer-group text-purple-400 text-lg"></i>
+                        </div>
+                        <input type="url" id="youtube-url" required placeholder="Paste Channel URL (@handle) or specific Video link..."
+                               class="w-full pl-11 pr-28 py-3.5 bg-gray-950/80 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all">
+                        <button type="button" onclick="document.getElementById('youtube-url').value=''" class="absolute right-3 px-2 py-1 text-xs text-gray-400 hover:text-gray-200 bg-gray-800 rounded-md transition-colors">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Format & Tone Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <!-- Format Options -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                            Target Output Format
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="format" value="Auto-Detect" checked class="peer sr-only">
+                                <div class="px-2.5 py-2 text-center text-xs font-semibold rounded-lg bg-gray-900 border border-gray-800 text-gray-400 peer-checked:bg-purple-600/20 peer-checked:border-purple-500 peer-checked:text-purple-300 transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Auto-Detect
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="format" value="Shorts" class="peer sr-only">
+                                <div class="px-2.5 py-2 text-center text-xs font-semibold rounded-lg bg-gray-900 border border-gray-800 text-gray-400 peer-checked:bg-purple-600/20 peer-checked:border-purple-500 peer-checked:text-purple-300 transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-mobile-screen"></i> Shorts
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="format" value="Long-form" class="peer sr-only">
+                                <div class="px-2.5 py-2 text-center text-xs font-semibold rounded-lg bg-gray-900 border border-gray-800 text-gray-400 peer-checked:bg-purple-600/20 peer-checked:border-purple-500 peer-checked:text-purple-300 transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-tv"></i> Long-Form
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="format" value="Educational Explainer" class="peer sr-only">
+                                <div class="px-2.5 py-2 text-center text-xs font-semibold rounded-lg bg-gray-900 border border-gray-800 text-gray-400 peer-checked:bg-purple-600/20 peer-checked:border-purple-500 peer-checked:text-purple-300 transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-graduation-cap"></i> Explainer
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Tone Options -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                            Desired Script Tone
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="tone" value="Auto-Detect" checked class="peer sr-only">
+                                <div class="px-2.5 py-2 text-center text-xs font-semibold rounded-lg bg-gray-900 border border-gray-800 text-gray-400 peer-checked:bg-indigo-600/20 peer-checked:border-indigo-500 peer-checked:text-indigo-300 transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> Auto-Detect
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="tone" value="Punchy & Viral" class="peer sr-only">
+                                <div class="px-2.5 py-2 text-center text-xs font-semibold rounded-lg bg-gray-900 border border-gray-800 text-gray-400 peer-checked:bg-indigo-600/20 peer-checked:border-indigo-500 peer-checked:text-indigo-300 transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-fire text-amber-500"></i> Punchy
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="tone" value="Storytelling & Drama" class="peer sr-only">
+                                <div class="px-2.5 py-2 text-center text-xs font-semibold rounded-lg bg-gray-900 border border-gray-800 text-gray-400 peer-checked:bg-indigo-600/20 peer-checked:border-indigo-500 peer-checked:text-indigo-300 transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-book-open text-purple-400"></i> Story
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="tone" value="Controversial & Bold" class="peer sr-only">
+                                <div class="px-2.5 py-2 text-center text-xs font-semibold rounded-lg bg-gray-900 border border-gray-800 text-gray-400 peer-checked:bg-indigo-600/20 peer-checked:border-indigo-500 peer-checked:text-indigo-300 transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-bullhorn text-red-400"></i> Bold
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" id="submit-btn" class="w-full py-4 px-6 gradient-btn text-white font-bold text-sm sm:text-base rounded-xl shadow-lg flex items-center justify-center gap-2 tracking-wide">
+                        <i class="fa-solid fa-bolt text-amber-300"></i> Execute Automated 12-State Channel Clone
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading-section" class="hidden glass-card rounded-2xl p-8 text-center space-y-4 border border-purple-500/30">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/20 text-purple-400 text-2xl pulse-glow mb-2">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">Running 12-State AI Channel Clone Pipeline...</h3>
+            <p class="text-xs text-gray-400 max-w-md mx-auto">
+                Analyzing transcripts, building branding brief, extracting Style DNA, writing full teleprompter script, and generating beat-by-beat prompts.
+            </p>
+            <div class="w-full max-w-xs mx-auto bg-gray-900 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full w-2/3 animate-pulse"></div>
+            </div>
+        </div>
+
+        <!-- Results Display Section -->
+        <div id="results-section" class="hidden space-y-6">
+
+            <!-- Video Summary Card -->
+            <div class="glass-card rounded-2xl p-5 border border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-5">
+                <div class="flex flex-col sm:flex-row items-center gap-5 w-full">
+                    <img id="res-thumbnail" src="" alt="Thumbnail" class="w-full sm:w-44 h-28 object-cover rounded-xl border border-gray-800 flex-shrink-0">
+                    <div class="space-y-1.5 w-full text-center sm:text-left">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[11px] font-semibold">
+                            <i class="fa-solid fa-circle-check"></i> 12-State Channel Clone Complete
+                        </div>
+                        <h3 id="res-original-title" class="text-base sm:text-lg font-bold text-white line-clamp-1">Original Video Title</h3>
+                        <p class="text-xs text-gray-400 flex items-center justify-center sm:justify-start gap-2">
+                            <span><i class="fa-solid fa-user text-gray-500"></i> <span id="res-author">Channel</span></span>
+                            <span>•</span>
+                            <span><i class="fa-solid fa-file-lines text-gray-500"></i> <span id="res-word-count">Transcript stats</span></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- STATE 12: Export Word Document Button -->
+                <button id="export-docx-btn" onclick="exportWordDoc()" class="w-full sm:w-auto px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 flex-shrink-0 transition-all shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-file-word text-sm"></i> Export Word (.docx)
+                </button>
+            </div>
+
+            <!-- Tab Navigation Bar -->
+            <div class="flex items-center gap-2 border-b border-gray-800 pb-1 overflow-x-auto">
+                <button data-tab="branding" class="tab-btn tab-active px-4 py-2.5 text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-palette text-amber-400"></i> Branding Brief (State 2)
+                </button>
+                <button data-tab="script" class="tab-btn text-gray-400 px-4 py-2.5 text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap hover:text-gray-200">
+                    <i class="fa-solid fa-scroll text-purple-400"></i> Script & Hook (State 5 & 6)
+                </button>
+                <button data-tab="visuals" class="tab-btn text-gray-400 px-4 py-2.5 text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap hover:text-gray-200">
+                    <i class="fa-solid fa-clackboard text-cyan-400"></i> Beat Prompts (State 8 & 9)
+                </button>
+                <button data-tab="titles" class="tab-btn text-gray-400 px-4 py-2.5 text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap hover:text-gray-200">
+                    <i class="fa-solid fa-heading text-indigo-400"></i> Topic Ideas (State 4)
+                </button>
+                <button data-tab="seo" class="tab-btn text-gray-400 px-4 py-2.5 text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap hover:text-gray-200">
+                    <i class="fa-solid fa-magnifying-glass-chart text-emerald-400"></i> SEO & Description
+                </button>
+                <button data-tab="monetization" class="tab-btn text-gray-400 px-4 py-2.5 text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap hover:text-gray-200">
+                    <i class="fa-solid fa-sack-dollar text-amber-400"></i> Monetization Tips
+                </button>
+            </div>
+
+            <!-- TAB 0: BRANDING BRIEF (State 2) -->
+            <div id="tab-branding" class="tab-content space-y-6">
+                <div class="glass-card rounded-xl p-5 border border-amber-500/30 space-y-4">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-id-card"></i> Suggested Clone Channel Names
+                    </h4>
+                    <div id="res-branding-names" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+
+                    <div class="space-y-1.5 pt-2">
+                        <h5 class="text-xs font-bold uppercase tracking-wider text-gray-300">Channel Description Variants</h5>
+                        <div id="res-branding-desc" class="space-y-2 text-xs text-gray-300"></div>
+                    </div>
+
+                    <div class="space-y-2 pt-2 border-t border-gray-800">
+                        <div class="space-y-1">
+                            <span class="text-xs font-semibold text-purple-400">Logo Prompt (Midjourney)</span>
+                            <p id="res-logo-prompt" class="p-3 bg-gray-950/90 rounded-xl border border-gray-800 text-xs font-mono text-purple-300">Logo prompt...</p>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-xs font-semibold text-indigo-400">Banner Prompt (Midjourney)</span>
+                            <p id="res-banner-prompt" class="p-3 bg-gray-950/90 rounded-xl border border-gray-800 text-xs font-mono text-indigo-300">Banner prompt...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 1: SCRIPT & HOOK (State 5 & 6) -->
+            <div id="tab-script" class="tab-content hidden space-y-6">
+                <!-- Hook Strategy Box -->
+                <div class="p-4 bg-purple-950/20 border border-purple-500/30 rounded-xl space-y-1">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-dna"></i> Style DNA & Hook Strategy
+                    </h4>
+                    <p id="res-hook-strategy" class="text-xs sm:text-sm text-gray-300">Analysis of the original hook mechanics...</p>
+                </div>
+
+                <!-- 3-Second Viral Opening Hook -->
+                <div class="glass-card rounded-xl p-5 border border-indigo-500/30 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-fire"></i> New 3-Second Retention Hook
+                        </span>
+                        <button onclick="copyToClipboard(document.getElementById('res-3sec-hook').innerText)" class="px-2.5 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-lg transition-colors">
+                            <i class="fa-regular fa-copy"></i> Copy Hook
+                        </button>
+                    </div>
+                    <p id="res-3sec-hook" class="text-sm sm:text-base font-semibold text-white bg-gray-950/80 p-3.5 rounded-lg border border-gray-800">
+                        Opening line...
+                    </p>
+                </div>
+
+                <!-- Full Script Card -->
+                <div class="glass-card rounded-xl p-5 border border-gray-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-align-left text-purple-400"></i> Full AI Cloned Script
+                        </span>
+                        <button onclick="copyFullScript()" class="px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg transition-colors flex items-center gap-1.5">
+                            <i class="fa-regular fa-copy"></i> Copy Full Script
+                        </button>
+                    </div>
+                    <div class="bg-gray-950/90 p-4 sm:p-5 rounded-xl border border-gray-800 overflow-x-auto">
+                        <pre id="res-full-script" class="text-xs sm:text-sm text-gray-200 whitespace-pre-wrap font-mono leading-relaxed">Script content...</pre>
+                    </div>
+                </div>
+
+                <!-- Call To Action -->
+                <div class="glass-card rounded-xl p-4 border border-gray-800 space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Call To Action (Outro)</span>
+                    <p id="res-cta" class="text-xs sm:text-sm text-gray-300 font-medium">Outro line...</p>
+                </div>
+            </div>
+
+            <!-- TAB: VISUALS & BEAT PROMPTS (State 8 & 9) -->
+            <div id="tab-visuals" class="tab-content hidden space-y-4">
+                <div class="glass-card rounded-xl p-5 border border-gray-800 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-clackboard"></i> Beat-by-Beat Image & Video Motion Prompts (3-5s beats)
+                        </h4>
+                        <span class="text-[11px] text-gray-400">Standalone Midjourney / Runway Prompts</span>
+                    </div>
+
+                    <div id="res-visuals-container" class="space-y-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: TOPIC IDEAS (State 4) -->
+            <div id="tab-titles" class="tab-content hidden space-y-6">
+                <!-- Titles Section -->
+                <div class="glass-card rounded-xl p-5 border border-gray-800 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-trend-up"></i> 5 Viral Topic & Video Ideas
+                    </h4>
+                    <div id="res-titles-container" class="space-y-2">
+                        <!-- Dynamic titles populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Thumbnail Concept Section -->
+                <div class="glass-card rounded-xl p-5 border border-gray-800 space-y-4">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-image"></i> AI Thumbnail Concept
+                    </h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-3.5 bg-gray-950/80 rounded-xl border border-gray-800 space-y-1">
+                            <span class="text-gray-400 font-semibold uppercase text-[10px]">Visual Layout</span>
+                            <p id="res-thumb-desc" class="text-gray-200 font-medium">Layout description...</p>
+                        </div>
+                        <div class="p-3.5 bg-gray-950/80 rounded-xl border border-gray-800 space-y-1">
+                            <span class="text-gray-400 font-semibold uppercase text-[10px]">Bold Text Overlay</span>
+                            <p id="res-thumb-text" class="text-amber-400 font-bold text-sm">Text on thumbnail</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-400">Midjourney / DALL-E Image Prompt</span>
+                            <button onclick="copyToClipboard(document.getElementById('res-thumb-prompt').innerText)" class="px-2.5 py-1 text-xs bg-gray-800 hover:bg-purple-600 text-gray-300 hover:text-white rounded-md transition-colors">
+                                <i class="fa-regular fa-copy"></i> Copy Prompt
+                            </button>
+                        </div>
+                        <p id="res-thumb-prompt" class="p-3 bg-gray-950/90 rounded-xl border border-gray-800 text-xs font-mono text-purple-300">Prompt text...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SEO PACKAGE -->
+            <div id="tab-seo" class="tab-content hidden space-y-6">
+                <!-- Description Box -->
+                <div class="glass-card rounded-xl p-5 border border-gray-800 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-text"></i> Monetization SEO Description
+                        </h4>
+                        <button onclick="copyToClipboard(document.getElementById('res-seo-desc').innerText)" class="px-2.5 py-1 text-xs bg-gray-800 hover:bg-emerald-600 text-gray-300 hover:text-white rounded-md transition-colors">
+                            <i class="fa-regular fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre id="res-seo-desc" class="p-3.5 bg-gray-950/90 rounded-xl border border-gray-800 text-xs text-gray-300 whitespace-pre-wrap font-sans">Description...</pre>
+                </div>
+
+                <!-- Tags & Hashtags -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-card rounded-xl p-4 border border-gray-800 space-y-2">
+                        <h5 class="text-xs font-bold uppercase tracking-wider text-purple-400">Search Tags</h5>
+                        <div id="res-seo-tags" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                    <div class="glass-card rounded-xl p-4 border border-gray-800 space-y-2">
+                        <h5 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Trending Hashtags</h5>
+                        <div id="res-seo-hashtags" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: MONETIZATION TIPS -->
+            <div id="tab-monetization" class="tab-content hidden space-y-4">
+                <div class="glass-card rounded-xl p-5 border border-gray-800 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line"></i> Algorithmic Retention & Channel Growth Strategy
+                    </h4>
+                    <ul id="res-monetization-tips" class="space-y-2.5">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-nav py-4 border-t border-gray-800 text-center text-xs text-gray-500">
+        <p>TubeClone AI — Built for Creators & YouTube Channel Automation</p>
+    </footer>
+
+    <!-- API Key Config Modal -->
+    <div id="api-key-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-gray-800 space-y-5 relative">
+            <button onclick="toggleModal('api-key-modal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-gear"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white">AI Provider Settings</h3>
+                    <p class="text-xs text-gray-400">Select your preferred AI engine & API key.</p>
+                </div>
+            </div>
+
+            <!-- Provider Selection -->
+            <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-300">Choose AI Provider</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="provider-choice" value="deepseek" checked class="peer sr-only">
+                        <div class="p-3 rounded-xl bg-gray-950 border border-gray-800 peer-checked:bg-blue-600/20 peer-checked:border-blue-500 transition-all text-left">
+                            <span class="block text-xs font-bold text-blue-400">DeepSeek AI</span>
+                            <span class="block text-[10px] text-gray-400 mt-0.5">Recommended (Ultra Cheap)</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="provider-choice" value="gemini" class="peer sr-only">
+                        <div class="p-3 rounded-xl bg-gray-950 border border-gray-800 peer-checked:bg-purple-600/20 peer-checked:border-purple-500 transition-all text-left">
+                            <span class="block text-xs font-bold text-purple-400">Google Gemini</span>
+                            <span class="block text-[10px] text-gray-400 mt-0.5">Google AI Studio</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Key Input -->
+            <div class="space-y-2">
+                <label for="api-key-input" class="block text-xs font-medium text-gray-300" id="key-input-label">Enter DeepSeek API Key</label>
+                <input type="password" id="api-key-input" placeholder="sk-..."
+                       class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-purple-500">
+                <p class="text-[11px] text-gray-400 flex items-center gap-1" id="key-help-text">
+                    <i class="fa-solid fa-info-circle text-blue-400"></i>
+                    Get an API key at <a href="https://platform.deepseek.com/" target="_blank" class="text-blue-400 underline font-semibold" id="key-link">platform.deepseek.com</a>.
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button onclick="toggleModal('api-key-modal', false)" class="px-4 py-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors">
+                    Cancel
+                </button>
+                <button id="save-api-key-btn" class="px-4 py-2 text-xs font-semibold gradient-btn text-white rounded-lg">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden translate-y-10 opacity-0 transition-all duration-300">
+        <div class="flex items-center gap-3 px-4 py-3 bg-gray-900/90 text-white rounded-xl border border-purple-500/40 shadow-2xl backdrop-blur-md text-xs font-medium">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-purple-400"></i>
+            <span id="toast-msg">Toast message</span>
+        </div>
+    </div>
+
+    <!-- JS Application script with Cache Busting -->
+    <script src="/static/js/main.js?v=2.2.0"></script>
+</body>
+</html>
