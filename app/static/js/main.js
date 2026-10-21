@@ -11,41 +11,6 @@ window.cloneChannelUrl = cloneChannelUrl;
 window.generateScriptForTopic = generateScriptForTopic;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Default provider
-    let selectedProvider = localStorage.getItem('ai_provider') || 'deepseek';
-
-    // Set active radio
-    const providerRadios = document.querySelectorAll('input[name="provider-choice"]');
-    providerRadios.forEach(r => {
-        if (r.value === selectedProvider) {
-            r.checked = true;
-        }
-        r.addEventListener('change', (e) => {
-            selectedProvider = e.target.value;
-            localStorage.setItem('ai_provider', selectedProvider);
-            updateModalUI(selectedProvider);
-        });
-    });
-
-    updateModalUI(selectedProvider);
-
-    // Save API Key button
-    const saveApiKeyBtn = document.getElementById('save-api-key-btn');
-    if (saveApiKeyBtn) {
-        saveApiKeyBtn.addEventListener('click', () => {
-            const apiKeyInput = document.getElementById('api-key-input');
-            const val = apiKeyInput.value.trim();
-            const provider = document.querySelector('input[name="provider-choice"]:checked')?.value || 'deepseek';
-
-            localStorage.setItem(`${provider}_api_key`, val);
-            localStorage.setItem('ai_provider', provider);
-
-            updateApiKeyBadgeStatus();
-            showToast('Settings saved successfully!');
-            toggleModal('api-key-modal', false);
-        });
-    }
-
     // Bind Explore Niches Button directly
     const exploreBtn = document.getElementById('explore-niches-btn');
     if (exploreBtn) {
@@ -124,12 +89,9 @@ async function loadTrendingNiches(category = 'Finance & Wealth') {
     if (!grid) return;
     grid.innerHTML = `<p class="text-xs text-amber-300 p-4 col-span-full text-center"><i class="fa-solid fa-spinner fa-spin"></i> Dynamically searching live YouTube channels & niches in "${escapeHtml(category)}"...</p>`;
 
-    const provider = localStorage.getItem('ai_provider') || 'deepseek';
-    let apiKey = localStorage.getItem(`${provider}_api_key`) || localStorage.getItem('deepseek_api_key') || localStorage.getItem('gemini_api_key') || '';
-
     try {
         console.log("Fetching dynamic niches for:", category);
-        const url = `/api/trending-niches?category=${encodeURIComponent(category)}&api_key=${encodeURIComponent(apiKey)}&ai_provider=${encodeURIComponent(provider)}`;
+        const url = `/api/trending-niches?category=${encodeURIComponent(category)}`;
         const res = await fetch(url);
         const rawText = await res.text();
         let data = {};
@@ -186,7 +148,7 @@ function renderNicheCards(niches) {
                         <div class="space-y-1.5 pt-1 border-t border-gray-800/80">
                             <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">🎥 Live YouTube Channels to Clone:</span>
                             <div class="space-y-1.5">
-                                ${channels.map(ch => {
+                                ${(channels).map(ch => {
                                     const chName = typeof ch === 'object' ? (ch.name || 'Creator Channel') : String(ch);
                                     const chUrl = typeof ch === 'object' ? (ch.url || `https://www.youtube.com/${chName}`) : `https://www.youtube.com/${chName}`;
                                     const chSubs = typeof ch === 'object' ? (ch.subscriber_highlight || 'Active Creator') : 'Active Creator';
@@ -234,21 +196,12 @@ function cloneChannelUrl(encodedUrl) {
 }
 
 async function launchNicheChannel(nicheId) {
-    const provider = localStorage.getItem('ai_provider') || 'deepseek';
-    let apiKey = localStorage.getItem(`${provider}_api_key`) || localStorage.getItem('deepseek_api_key') || localStorage.getItem('gemini_api_key') || '';
-
-    if (!apiKey) {
-        toggleModal('api-key-modal', true);
-        showToast(`Please enter your ${provider === 'deepseek' ? 'DeepSeek' : 'Gemini'} API Key to launch channel setup.`, 'error');
-        return;
-    }
-
     showLoadingState(true);
     hideResults();
     showToast('Building complete Channel Setup Package...');
 
     try {
-        const url = `/api/launch-niche-channel?niche_id=${encodeURIComponent(nicheId)}&api_key=${encodeURIComponent(apiKey)}&ai_provider=${encodeURIComponent(provider)}`;
+        const url = `/api/launch-niche-channel?niche_id=${encodeURIComponent(nicheId)}`;
         const response = await fetch(url);
         const rawText = await response.text();
         let result = {};
@@ -271,61 +224,6 @@ async function launchNicheChannel(nicheId) {
         showErrorOnScreen(err.message);
     } finally {
         showLoadingState(false);
-    }
-}
-
-function updateModalUI(provider) {
-    const keyInput = document.getElementById('api-key-input');
-    const label = document.getElementById('key-input-label');
-    const help = document.getElementById('key-help-text');
-
-    const savedKey = localStorage.getItem(`${provider}_api_key`) || localStorage.getItem('deepseek_api_key') || localStorage.getItem('gemini_api_key') || '';
-    if (keyInput) keyInput.value = savedKey;
-
-    if (provider === 'deepseek') {
-        if (label) label.innerText = 'Enter DeepSeek API Key';
-        if (keyInput) keyInput.placeholder = 'sk-...';
-        if (help) {
-            help.innerHTML = `<i class="fa-solid fa-info-circle text-blue-400"></i> Get an API key at <a href="https://platform.deepseek.com/" target="_blank" class="text-blue-400 underline font-semibold">platform.deepseek.com</a>.`;
-        }
-    } else {
-        if (label) label.innerText = 'Enter Gemini API Key';
-        if (keyInput) keyInput.placeholder = 'AIzaSy...';
-        if (help) {
-            help.innerHTML = `<i class="fa-solid fa-info-circle text-purple-400"></i> Get a key at <a href="https://aistudio.google.com/" target="_blank" class="text-purple-400 underline font-semibold">aistudio.google.com</a>.`;
-        }
-    }
-
-    updateApiKeyBadgeStatus();
-}
-
-function updateApiKeyBadgeStatus() {
-    const badgeText = document.getElementById('badge-text');
-    const apiKeyBadge = document.getElementById('api-key-badge');
-    if (!apiKeyBadge || !badgeText) return;
-
-    const provider = localStorage.getItem('ai_provider') || 'deepseek';
-    const key = localStorage.getItem(`${provider}_api_key`) || localStorage.getItem('deepseek_api_key') || localStorage.getItem('gemini_api_key') || '';
-    const providerName = provider === 'deepseek' ? 'DeepSeek' : 'Gemini';
-
-    if (key) {
-        apiKeyBadge.className = 'px-3 py-1.5 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5 cursor-pointer hover:bg-emerald-500/20 transition-all';
-        badgeText.innerText = `${providerName} Ready`;
-    } else {
-        apiKeyBadge.className = 'px-3 py-1.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5 cursor-pointer hover:bg-amber-500/20 transition-all';
-        badgeText.innerText = `Set ${providerName} Key`;
-    }
-}
-
-function toggleModal(modalId, show) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    if (show) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    } else {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
     }
 }
 
@@ -363,20 +261,6 @@ async function handleFormSubmit(e) {
         return;
     }
 
-    const provider = localStorage.getItem('ai_provider') || 'deepseek';
-    let apiKey = localStorage.getItem(`${provider}_api_key`) || '';
-
-    // Smart fallback if key is in another provider slot
-    if (!apiKey) {
-        apiKey = localStorage.getItem('deepseek_api_key') || localStorage.getItem('gemini_api_key') || '';
-    }
-
-    if (!apiKey) {
-        toggleModal('api-key-modal', true);
-        showToast(`Please enter your ${provider === 'deepseek' ? 'DeepSeek' : 'Gemini'} API Key to continue.`, 'error');
-        return;
-    }
-
     const targetFormat = document.querySelector('input[name="format"]:checked')?.value || 'Auto-Detect';
     const targetTone = document.querySelector('input[name="tone"]:checked')?.value || 'Auto-Detect';
 
@@ -385,15 +269,13 @@ async function handleFormSubmit(e) {
     hideResults();
 
     try {
-        console.log("Sending request to /api/analyze...", { youtubeUrl, provider, targetFormat, targetTone });
+        console.log("Sending request to /api/analyze...", { youtubeUrl, targetFormat, targetTone });
 
         const response = await fetch('/api/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 youtube_url: youtubeUrl,
-                api_key: apiKey,
-                ai_provider: provider,
                 target_format: targetFormat,
                 target_tone: targetTone
             })
@@ -409,9 +291,6 @@ async function handleFormSubmit(e) {
 
         if (!response.ok || !result.success) {
             const errDetail = result.error || result.detail || 'Failed to analyze channel';
-            if (errDetail.toLowerCase().includes('key') || errDetail.toLowerCase().includes('missing')) {
-                toggleModal('api-key-modal', true);
-            }
             throw new Error(errDetail);
         }
 
@@ -452,11 +331,6 @@ function showErrorOnScreen(msg) {
                 </div>
                 <h3 class="text-base font-bold text-white">Analysis Could Not Complete</h3>
                 <p class="text-xs text-red-300 max-w-lg mx-auto">${escapeHtml(msg)}</p>
-                <div class="pt-2">
-                    <button onclick="toggleModal('api-key-modal', true)" class="px-4 py-2 text-xs font-semibold bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors">
-                        <i class="fa-solid fa-key"></i> Open Settings & Check API Key
-                    </button>
-                </div>
             </div>
         `;
         resultsSection.classList.remove('hidden');

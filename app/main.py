@@ -15,7 +15,7 @@ from app.services.niche_service import NicheService
 app = FastAPI(
     title="TubeClone AI",
     description="Automated 12-State YouTube Channel Clone, Dynamic Niche Discovery & Script Engine",
-    version="3.2.0"
+    version="3.3.0"
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -24,19 +24,16 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 class AnalyzeRequest(BaseModel):
     youtube_url: str = Field(..., description="Video URL or Channel URL")
-    api_key: Optional[str] = Field(None, description="API Key for selected provider")
     ai_provider: Optional[str] = Field("deepseek", description="AI Provider e.g. deepseek or gemini")
     target_format: str = Field("Auto-Detect", description="Target format e.g. Auto-Detect, Shorts, Long-form")
     target_tone: str = Field("Auto-Detect", description="Target tone e.g. Auto-Detect, Punchy, Storytelling")
 
 class NicheDiscoveryRequest(BaseModel):
     category: Optional[str] = "Finance & Wealth"
-    api_key: Optional[str] = ""
     ai_provider: Optional[str] = "deepseek"
 
 class NicheLaunchRequest(BaseModel):
     niche_id: str = Field(..., description="Selected niche ID")
-    api_key: Optional[str] = Field(None, description="API Key")
     ai_provider: Optional[str] = Field("deepseek", description="AI Provider")
 
 @app.get("/", response_class=HTMLResponse)
@@ -55,18 +52,15 @@ async def health():
 @app.get("/api/trending-niches")
 async def get_trending_niches_get(
     category: str = Query("Finance & Wealth"),
-    api_key: str = Query(""),
     ai_provider: str = Query("deepseek")
 ):
-    key = api_key.strip() if api_key else ""
     provider = ai_provider.strip().lower() if ai_provider else "deepseek"
-    if not key:
-        env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
-        key = os.getenv(env_var, "")
+    env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
+    api_key = os.getenv(env_var, "")
 
     res = NicheService.discover_dynamic_niches(
         category=category,
-        api_key=key,
+        api_key=api_key,
         ai_provider=provider
     )
     return JSONResponse(content=res)
@@ -75,15 +69,12 @@ async def get_trending_niches_get(
 async def get_trending_niches_post(payload: NicheDiscoveryRequest):
     cat = payload.category or "Finance & Wealth"
     provider = (payload.ai_provider or "deepseek").lower()
-    key = (payload.api_key or "").strip()
-
-    if not key:
-        env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
-        key = os.getenv(env_var, "")
+    env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
+    api_key = os.getenv(env_var, "")
 
     res = NicheService.discover_dynamic_niches(
         category=cat,
-        api_key=key,
+        api_key=api_key,
         ai_provider=provider
     )
     return JSONResponse(content=res)
@@ -91,24 +82,19 @@ async def get_trending_niches_post(payload: NicheDiscoveryRequest):
 @app.get("/api/launch-niche-channel")
 async def launch_niche_channel_get(
     niche_id: str = Query("stealth-wealth"),
-    api_key: str = Query(""),
     ai_provider: str = Query("deepseek")
 ):
     provider = ai_provider.lower().strip() if ai_provider else "deepseek"
-    key = api_key.strip() if api_key else ""
-
-    if not key:
-        env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
-        key = os.getenv(env_var, "")
+    env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
+    key = os.getenv(env_var, "")
 
     if not key:
         provider_name = "DeepSeek" if provider == "deepseek" else "Google Gemini"
-        get_key_url = "https://platform.deepseek.com/" if provider == "deepseek" else "https://aistudio.google.com/"
         return JSONResponse(
             status_code=400,
             content={
                 "success": False,
-                "error": f"{provider_name} API Key is missing. Please click 'Settings' in the header to enter your key (Get a key at {get_key_url})."
+                "error": f"{provider_name} API Key is missing in backend environment variables ({env_var}). Please add it to your server configuration."
             }
         )
 
@@ -151,20 +137,16 @@ async def launch_niche_channel_get(
 async def launch_niche_channel_post(payload: NicheLaunchRequest):
     target_id = payload.niche_id or "stealth-wealth"
     provider = (payload.ai_provider or "deepseek").lower()
-    key = (payload.api_key or "").strip()
-
-    if not key:
-        env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
-        key = os.getenv(env_var, "")
+    env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
+    key = os.getenv(env_var, "")
 
     if not key:
         provider_name = "DeepSeek" if provider == "deepseek" else "Google Gemini"
-        get_key_url = "https://platform.deepseek.com/" if provider == "deepseek" else "https://aistudio.google.com/"
         return JSONResponse(
             status_code=400,
             content={
                 "success": False,
-                "error": f"{provider_name} API Key is missing. Please click 'Settings' in the header to enter your key (Get a key at {get_key_url})."
+                "error": f"{provider_name} API Key is missing in backend environment variables ({env_var}). Please add it to your server configuration."
             }
         )
 
@@ -215,26 +197,22 @@ async def analyze_video(payload: AnalyzeRequest):
     transcript_text = video_info.get("transcript", "")
     transcript_status = video_info.get("transcript_status", {})
 
-    # 2. Determine API Key
+    # 2. Determine Backend API Key
     provider = payload.ai_provider.lower() if payload.ai_provider else "deepseek"
-    api_key = payload.api_key.strip() if payload.api_key else ""
-
-    if not api_key:
-        env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
-        api_key = os.getenv(env_var, "")
+    env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
+    api_key = os.getenv(env_var, "")
 
     if not api_key:
         provider_name = "DeepSeek" if provider == "deepseek" else "Google Gemini"
-        get_key_url = "https://platform.deepseek.com/" if provider == "deepseek" else "https://aistudio.google.com/"
         return JSONResponse(
             status_code=400,
             content={
                 "success": False,
-                "error": f"{provider_name} API Key is missing. Please click 'Settings' in the header to enter your key (Get a key at {get_key_url})."
+                "error": f"{provider_name} API Key is missing in backend environment variables ({env_var}). Please add it to your Vercel / server Environment Variables."
             }
         )
 
-    # 3. Generate Complete 12-State Channel Clone Package (Auto-Detecting format/tone by default)
+    # 3. Generate Complete 12-State Channel Clone Package
     ai_result = AIService.generate_cloned_content(
         transcript=transcript_text,
         video_metadata=metadata,
