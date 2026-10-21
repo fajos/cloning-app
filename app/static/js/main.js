@@ -104,18 +104,17 @@ function toggleNicheExplorer() {
     }
 }
 
-async function switchNicheCategory(cat) {
+async function switchNicheCategory(cat, clickedBtn) {
     currentNicheCategory = cat;
 
     const btns = document.querySelectorAll('.niche-cat-btn');
     btns.forEach(b => {
-        const keyword = cat.split(' ')[0].toLowerCase();
-        if (b.innerText.toLowerCase().includes(keyword)) {
-            b.className = 'niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 whitespace-nowrap';
-        } else {
-            b.className = 'niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap';
-        }
+        b.className = 'niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-gray-200 whitespace-nowrap';
     });
+
+    if (clickedBtn) {
+        clickedBtn.className = 'niche-cat-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 whitespace-nowrap';
+    }
 
     await loadTrendingNiches(cat);
 }
@@ -130,15 +129,8 @@ async function loadTrendingNiches(category = 'Finance & Wealth') {
 
     try {
         console.log("Fetching dynamic niches for:", category);
-        const res = await fetch('/api/trending-niches', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                category: category,
-                api_key: apiKey,
-                ai_provider: provider
-            })
-        });
+        const url = `/api/trending-niches?category=${encodeURIComponent(category)}&api_key=${encodeURIComponent(apiKey)}&ai_provider=${encodeURIComponent(provider)}`;
+        const res = await fetch(url);
         const data = await res.json();
         console.log("Dynamic Niches API Response:", data);
 
@@ -248,15 +240,8 @@ async function launchNicheChannel(nicheId) {
     showToast('Building complete Channel Setup Package...');
 
     try {
-        const response = await fetch('/api/launch-niche-channel', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                niche_id: nicheId,
-                api_key: apiKey,
-                ai_provider: provider
-            })
-        });
+        const url = `/api/launch-niche-channel?niche_id=${encodeURIComponent(nicheId)}&api_key=${encodeURIComponent(apiKey)}&ai_provider=${encodeURIComponent(provider)}`;
+        const response = await fetch(url);
 
         const result = await response.json();
         if (!response.ok || !result.success) {
