@@ -137,7 +137,8 @@ async function loadTrendingNiches(category = 'Finance & Wealth') {
             data = JSON.parse(rawText);
         } catch (pErr) {
             console.error("Failed to parse JSON response:", rawText);
-            grid.innerHTML = `<p class="text-xs text-red-400 p-4 col-span-full text-center">Server returned an unexpected response. Please try refreshing.</p>`;
+            const errSnippet = rawText ? escapeHtml(rawText.substring(0, 150)) : 'Empty Response';
+            grid.innerHTML = `<p class="text-xs text-red-400 p-4 col-span-full text-center">Server Response Error (${res.status}): ${errSnippet}</p>`;
             return;
         }
 
