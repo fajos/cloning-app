@@ -40,6 +40,8 @@ class NicheLaunchRequest(BaseModel):
     ai_provider: Optional[str] = Field("deepseek", description="AI Provider")
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/api/index.py", response_class=HTMLResponse)
+@app.get("/api/index", response_class=HTMLResponse)
 async def home(request: Request):
     default_key_set = bool(os.getenv("DEEPSEEK_API_KEY") or os.getenv("GEMINI_API_KEY"))
     return templates.TemplateResponse(
