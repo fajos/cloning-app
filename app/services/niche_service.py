@@ -11,14 +11,16 @@ class NicheService:
         ai_provider: str = "deepseek"
     ) -> Dict[str, Any]:
         """
-        Dynamically discovers real-time exploding YouTube sub-niches AND pulls live YouTube channels in real-time.
+        Dynamically discovers real-time exploding YouTube sub-niches AND pulls live YouTube channels.
+        Includes fast fallback for Vercel serverless functions.
         """
-        # 1. Pull LIVE active channels directly from YouTube's live search index
-        live_channels = VideoService.search_live_youtube_channels(category, max_results=8)
+        try:
+            live_channels = VideoService.search_live_youtube_channels(category, max_results=6)
+        except Exception:
+            live_channels = []
 
         if not api_key:
             niches = NicheService._get_default_niches(category)
-            # Attach live channels to default niches if available
             if live_channels and len(niches) > 0:
                 niches[0]["suggested_channels"] = live_channels[:3]
                 if len(niches) > 1 and len(live_channels) > 3:
@@ -27,15 +29,15 @@ class NicheService:
 
         prompt = f"""
 You are a Real-Time YouTube Niche Analyst and Creator Market Intelligence Engine.
-Your task is to analyze the YouTube creator ecosystem and identify 4 HIGH-DEMAND, LOW-COMPETITION, HIGH-CPM trending sub-niches within the category/topic: "{category}".
+Your task is to analyze the YouTube creator ecosystem and identify 3 HIGH-DEMAND, LOW-COMPETITION, HIGH-CPM trending sub-niches within the category/topic: "{category}".
 
-Here are live YouTube channels currently active in this topic on YouTube:
+Live YouTube channels active in this topic:
 {json.dumps(live_channels if live_channels else [], indent=2)}
 
 For EACH sub-niche, generate:
 1. Sub-Niche Name & Description
 2. Estimated Advertiser CPM ($) & Competition Level
-3. 2-3 REAL YouTube Channels matching this niche (use the live channels provided or real active handles)
+3. 2-3 REAL YouTube Channels matching this niche (use live channels provided or real active handles)
 4. 3 High-CTR Viral Video Topic Ideas
 
 Respond strictly with valid JSON following this schema:
@@ -73,22 +75,24 @@ Respond strictly with valid JSON following this schema:
 }}
 """
 
-        if ai_provider == "deepseek":
-            res = AIService._call_deepseek_api(prompt, api_key)
-        else:
-            res = AIService._call_gemini_api(prompt, api_key)
+        try:
+            if ai_provider == "deepseek":
+                res = AIService._call_deepseek_api(prompt, api_key)
+            else:
+                res = AIService._call_gemini_api(prompt, api_key)
 
-        if res.get("success") and isinstance(res.get("data"), dict) and res["data"].get("niches"):
-            niches = res["data"]["niches"]
-            # Ensure live channel URLs are injected if available
-            if live_channels and len(niches) > 0:
-                for idx, n in enumerate(niches):
-                    if not n.get("suggested_channels") or len(n["suggested_channels"]) == 0:
-                        start_idx = (idx * 2) % len(live_channels)
-                        n["suggested_channels"] = live_channels[start_idx:start_idx+2]
-            return {"success": True, "niches": niches}
+            if res.get("success") and isinstance(res.get("data"), dict) and res["data"].get("niches"):
+                niches = res["data"]["niches"]
+                if live_channels and len(niches) > 0:
+                    for idx, n in enumerate(niches):
+                        if not n.get("suggested_channels") or len(n["suggested_channels"]) == 0:
+                            start_idx = (idx * 2) % len(live_channels)
+                            n["suggested_channels"] = live_channels[start_idx:start_idx+2]
+                return {"success": True, "niches": niches}
+        except Exception as ex:
+            print("AI niche discovery error:", ex)
 
-        # Fallback if AI response failed
+        # Guaranteed instant fallback
         niches = NicheService._get_default_niches(category)
         if live_channels and len(niches) > 0:
             niches[0]["suggested_channels"] = live_channels[:3]
@@ -114,6 +118,12 @@ Respond strictly with valid JSON following this schema:
                             "url": "https://www.youtube.com/@MythologyExplained",
                             "subscriber_highlight": "1.8M+ subs",
                             "why_clone": "Masterclass in lore breakdowns with high retention visual storytelling."
+                        },
+                        {
+                            "name": "LIGHTS ARE OFF",
+                            "url": "https://www.youtube.com/@LIGHTSAREOFF",
+                            "subscriber_highlight": "18.9M+ views hit",
+                            "why_clone": "Ultra viral dark animated horror shorts."
                         }
                     ],
                     "example_topics": [

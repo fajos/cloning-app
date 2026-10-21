@@ -60,16 +60,15 @@ class VideoService:
         """
         VIRAL-FILTERED CHANNEL SEARCH:
         Searches YouTube for videos ordered by view count (sp=CAM%253D) and extracts channels that produced VERIFIED VIRAL VIDEOS (>50,000 to millions of views)!
-        Guarantees that tiny zero-view channels are 100% excluded!
+        Uses a strict 3.5s timeout for fast response on Vercel serverless.
         """
         try:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept-Language': 'en-US,en;q=0.9'
             }
-            # sp=CAM%253D sorts YouTube results by View Count (Highest Views First)
             search_url = f"https://www.youtube.com/results?search_query={requests.utils.quote(query)}&sp=CAM%253D"
-            res = requests.get(search_url, headers=headers, timeout=10)
+            res = requests.get(search_url, headers=headers, timeout=3.5)
 
             match = re.search(r'ytInitialData\s*=\s*({.+?});</script>', res.text)
             viral_channels = []
@@ -129,8 +128,7 @@ class VideoService:
                                     break
 
             return viral_channels
-        except Exception as e:
-            print("Error fetching viral YouTube channels:", e)
+        except Exception:
             return []
 
     @staticmethod
