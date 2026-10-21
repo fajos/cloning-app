@@ -15,7 +15,7 @@ from app.services.niche_service import NicheService
 app = FastAPI(
     title="TubeClone AI",
     description="Automated 12-State YouTube Channel Clone, Dynamic Niche Discovery & Script Engine",
-    version="3.1.0"
+    version="3.2.0"
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -55,28 +55,32 @@ async def health():
     return {"status": "ok", "service": "TubeClone AI"}
 
 @app.get("/api/trending-niches")
-@app.post("/api/trending-niches")
-async def get_trending_niches(
-    category: Optional[str] = Query("Finance & Wealth"),
-    api_key: Optional[str] = Query(""),
-    ai_provider: Optional[str] = Query("deepseek"),
-    payload: Optional[NicheDiscoveryRequest] = None
+async def get_trending_niches_get(
+    category: str = Query("Finance & Wealth"),
+    api_key: str = Query(""),
+    ai_provider: str = Query("deepseek")
 ):
-    """
-    Dynamically discovers real-time unsaturated high-CPM YouTube niches and top channel handles in ANY category.
-    Supports both GET and POST requests for Vercel serverless compatibility.
-    """
-    cat = category
-    provider = ai_provider
-    key = api_key
+    key = api_key.strip() if api_key else ""
+    provider = ai_provider.strip().lower() if ai_provider else "deepseek"
+    if not key:
+        env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
+        key = os.getenv(env_var, "")
 
-    if payload:
-        cat = payload.category or cat
-        provider = payload.ai_provider or provider
-        key = payload.api_key or key
+    res = NicheService.discover_dynamic_niches(
+        category=category,
+        api_key=key,
+        ai_provider=provider
+    )
+    return JSONResponse(content=res)
+
+@app.post("/api/trending-niches")
+async def get_trending_niches_post(payload: NicheDiscoveryRequest):
+    cat = payload.category or "Finance & Wealth"
+    provider = (payload.ai_provider or "deepseek").lower()
+    key = (payload.api_key or "").strip()
 
     if not key:
-        env_var = "DEEPSEEK_API_KEY" if provider.lower() == "deepseek" else "GEMINI_API_KEY"
+        env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
         key = os.getenv(env_var, "")
 
     res = NicheService.discover_dynamic_niches(
@@ -84,33 +88,16 @@ async def get_trending_niches(
         api_key=key,
         ai_provider=provider
     )
-    return res
+    return JSONResponse(content=res)
 
 @app.get("/api/launch-niche-channel")
-@app.post("/api/launch-niche-channel")
-async def launch_niche_channel(
-    niche_id: Optional[str] = Query(None),
-    api_key: Optional[str] = Query(""),
-    ai_provider: Optional[str] = Query("deepseek"),
-    payload: Optional[NicheLaunchRequest] = None
+async def launch_niche_channel_get(
+    niche_id: str = Query("stealth-wealth"),
+    api_key: str = Query(""),
+    ai_provider: str = Query("deepseek")
 ):
-    """
-    Generates a full Channel Setup Package for a selected Trending Niche!
-    """
-    target_id = niche_id
-    provider = ai_provider
-    key = api_key
-
-    if payload:
-        target_id = payload.niche_id or target_id
-        provider = payload.ai_provider or provider
-        key = payload.api_key or key
-
-    if not target_id:
-        target_id = "stealth-wealth"
-
-    provider = provider.lower() if provider else "deepseek"
-    key = key.strip() if key else ""
+    provider = ai_provider.lower().strip() if ai_provider else "deepseek"
+    key = api_key.strip() if api_key else ""
 
     if not key:
         env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
@@ -127,7 +114,62 @@ async def launch_niche_channel(
             }
         )
 
-    # Discover niches for the request to locate target niche info
+    niches_res = NicheService.discover_dynamic_niches(category="Finance & Wealth", api_key=key, ai_provider=provider)
+    niches = niches_res.get("niches", [])
+    target_niche = next((n for n in niches if n.get("id") == niche_id), None)
+
+    if not target_niche:
+        target_niche = {
+            "niche_name": niche_id.replace("-", " ").title(),
+            "category": "Trending Niche",
+            "cpm_estimate": "$25 - $40",
+            "description": "High-demand, unexploited YouTube creator niche."
+        }
+
+    ai_result = AIService.generate_niche_channel_launcher(
+        niche_info=target_niche,
+        api_key=key,
+        ai_provider=provider
+    )
+
+    if not ai_result.get("success"):
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "error": ai_result.get("error", "Failed to launch niche channel")}
+        )
+
+    return JSONResponse(content={
+        "success": True,
+        "niche": target_niche,
+        "video_metadata": {
+            "title": f"New Channel Setup: {target_niche.get('niche_name', 'Trending Niche')}",
+            "author": "New Creator",
+            "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop"
+        },
+        "data": ai_result["data"]
+    })
+
+@app.post("/api/launch-niche-channel")
+async def launch_niche_channel_post(payload: NicheLaunchRequest):
+    target_id = payload.niche_id or "stealth-wealth"
+    provider = (payload.ai_provider or "deepseek").lower()
+    key = (payload.api_key or "").strip()
+
+    if not key:
+        env_var = "DEEPSEEK_API_KEY" if provider == "deepseek" else "GEMINI_API_KEY"
+        key = os.getenv(env_var, "")
+
+    if not key:
+        provider_name = "DeepSeek" if provider == "deepseek" else "Google Gemini"
+        get_key_url = "https://platform.deepseek.com/" if provider == "deepseek" else "https://aistudio.google.com/"
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "error": f"{provider_name} API Key is missing. Please click 'Settings' in the header to enter your key (Get a key at {get_key_url})."
+            }
+        )
+
     niches_res = NicheService.discover_dynamic_niches(category="Finance & Wealth", api_key=key, ai_provider=provider)
     niches = niches_res.get("niches", [])
     target_niche = next((n for n in niches if n.get("id") == target_id), None)
@@ -152,7 +194,7 @@ async def launch_niche_channel(
             content={"success": False, "error": ai_result.get("error", "Failed to launch niche channel")}
         )
 
-    return {
+    return JSONResponse(content={
         "success": True,
         "niche": target_niche,
         "video_metadata": {
@@ -161,7 +203,7 @@ async def launch_niche_channel(
             "thumbnail": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop"
         },
         "data": ai_result["data"]
-    }
+    })
 
 @app.post("/api/analyze")
 async def analyze_video(payload: AnalyzeRequest):
@@ -214,13 +256,13 @@ async def analyze_video(payload: AnalyzeRequest):
             }
         )
 
-    return {
+    return JSONResponse(content={
         "success": True,
         "platform": video_info.get("platform", "Video"),
         "video_metadata": metadata,
         "transcript_status": transcript_status,
         "data": ai_result["data"]
-    }
+    })
 
 @app.post("/api/export-docx")
 async def export_docx(data: Dict[str, Any] = Body(...)):

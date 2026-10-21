@@ -131,8 +131,15 @@ async function loadTrendingNiches(category = 'Finance & Wealth') {
         console.log("Fetching dynamic niches for:", category);
         const url = `/api/trending-niches?category=${encodeURIComponent(category)}&api_key=${encodeURIComponent(apiKey)}&ai_provider=${encodeURIComponent(provider)}`;
         const res = await fetch(url);
-        const data = await res.json();
-        console.log("Dynamic Niches API Response:", data);
+        const rawText = await res.text();
+        let data = {};
+        try {
+            data = JSON.parse(rawText);
+        } catch (pErr) {
+            console.error("Failed to parse JSON response:", rawText);
+            grid.innerHTML = `<p class="text-xs text-red-400 p-4 col-span-full text-center">Server returned an unexpected response. Please try refreshing.</p>`;
+            return;
+        }
 
         if (data.success && data.niches && data.niches.length > 0) {
             trendingNichesList = data.niches;
@@ -242,8 +249,14 @@ async function launchNicheChannel(nicheId) {
     try {
         const url = `/api/launch-niche-channel?niche_id=${encodeURIComponent(nicheId)}&api_key=${encodeURIComponent(apiKey)}&ai_provider=${encodeURIComponent(provider)}`;
         const response = await fetch(url);
+        const rawText = await response.text();
+        let result = {};
+        try {
+            result = JSON.parse(rawText);
+        } catch (pErr) {
+            throw new Error('Server returned unexpected response format.');
+        }
 
-        const result = await response.json();
         if (!response.ok || !result.success) {
             throw new Error(result.error || 'Failed to launch niche channel');
         }
@@ -385,8 +398,13 @@ async function handleFormSubmit(e) {
             })
         });
 
-        const result = await response.json();
-        console.log("Analyze Response Result:", result);
+        const rawText = await response.text();
+        let result = {};
+        try {
+            result = JSON.parse(rawText);
+        } catch (pErr) {
+            throw new Error('Analysis returned invalid response.');
+        }
 
         if (!response.ok || !result.success) {
             const errDetail = result.error || result.detail || 'Failed to analyze channel';
