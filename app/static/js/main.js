@@ -2,6 +2,12 @@ let globalLastResult = null;
 let trendingNichesList = [];
 let currentNicheCategory = 'Finance & Wealth';
 
+// Verified Active Partner & Affiliate Programs (ElevenLabs & VidIQ)
+const PARTNER_LINKS = {
+    elevenlabs: 'https://elevenlabs.io/affiliates', // 30% Recurring AI Voice
+    vidiq: 'https://vidiq.com/affiliates'           // Up to 40% Recurring YouTube SEO
+};
+
 // Explicitly assign to window so inline onclick handlers never fail
 window.toggleNicheExplorer = toggleNicheExplorer;
 window.switchNicheCategory = switchNicheCategory;
@@ -9,6 +15,7 @@ window.searchCustomNiche = searchCustomNiche;
 window.launchNicheChannel = launchNicheChannel;
 window.cloneChannelUrl = cloneChannelUrl;
 window.generateScriptForTopic = generateScriptForTopic;
+window.openPartnerTool = openPartnerTool;
 
 document.addEventListener('DOMContentLoaded', () => {
     // Bind Explore Niches Button directly
@@ -43,6 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Automatically load trending niches on page start
     loadTrendingNiches(currentNicheCategory);
 });
+
+function openPartnerTool(toolName) {
+    const url = PARTNER_LINKS[toolName] || 'https://elevenlabs.io/affiliates';
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
 
 function searchCustomNiche() {
     const input = document.getElementById('niche-search-input');
@@ -89,9 +101,12 @@ async function loadTrendingNiches(category = 'Finance & Wealth') {
     if (!grid) return;
     grid.innerHTML = `<p class="text-xs text-amber-300 p-4 col-span-full text-center"><i class="fa-solid fa-spinner fa-spin"></i> Dynamically searching live YouTube channels & niches in "${escapeHtml(category)}"...</p>`;
 
+    const provider = localStorage.getItem('ai_provider') || 'deepseek';
+    let apiKey = localStorage.getItem(`${provider}_api_key`) || localStorage.getItem('deepseek_api_key') || localStorage.getItem('gemini_api_key') || '';
+
     try {
         console.log("Fetching dynamic niches for:", category);
-        const url = `/api/trending-niches?category=${encodeURIComponent(category)}`;
+        const url = `/api/trending-niches?category=${encodeURIComponent(category)}&api_key=${encodeURIComponent(apiKey)}&ai_provider=${encodeURIComponent(provider)}`;
         const res = await fetch(url);
         const rawText = await res.text();
         let data = {};
@@ -148,7 +163,7 @@ function renderNicheCards(niches) {
                         <div class="space-y-1.5 pt-1 border-t border-gray-800/80">
                             <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">🎥 Live YouTube Channels to Clone:</span>
                             <div class="space-y-1.5">
-                                ${(channels).map(ch => {
+                                ${channels.map(ch => {
                                     const chName = typeof ch === 'object' ? (ch.name || 'Creator Channel') : String(ch);
                                     const chUrl = typeof ch === 'object' ? (ch.url || `https://www.youtube.com/${chName}`) : `https://www.youtube.com/${chName}`;
                                     const chSubs = typeof ch === 'object' ? (ch.subscriber_highlight || 'Active Creator') : 'Active Creator';
@@ -440,11 +455,11 @@ function renderResults(res) {
 
                     <div class="space-y-2 pt-2 border-t border-gray-800">
                         <div class="space-y-1">
-                            <span class="text-xs font-semibold text-purple-400">Logo Prompt (Midjourney)</span>
+                            <span class="text-xs font-semibold text-purple-400">Logo Prompt (Midjourney / AI Generator)</span>
                             <p id="res-logo-prompt" class="p-3 bg-gray-950/90 rounded-xl border border-gray-800 text-xs font-mono text-purple-300">Logo prompt...</p>
                         </div>
-                        <div class="space-y-1">
-                            <span class="text-xs font-semibold text-indigo-400">Banner Prompt (Midjourney)</span>
+                        <div class="space-y-1 pt-2">
+                            <span class="text-xs font-semibold text-indigo-400">Banner Prompt (Midjourney / AI Generator)</span>
                             <p id="res-banner-prompt" class="p-3 bg-gray-950/90 rounded-xl border border-gray-800 text-xs font-mono text-indigo-300">Banner prompt...</p>
                         </div>
                     </div>
@@ -475,13 +490,18 @@ function renderResults(res) {
                 </div>
 
                 <div class="glass-card rounded-xl p-5 border border-gray-800 space-y-3">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <span class="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
                             <i class="fa-solid fa-align-left text-purple-400"></i> Full AI Cloned Script
                         </span>
-                        <button onclick="copyFullScript()" class="px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg transition-colors flex items-center gap-1.5">
-                            <i class="fa-regular fa-copy"></i> Copy Full Script
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="copyFullScript()" class="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold rounded-lg transition-colors flex items-center gap-1.5">
+                                <i class="fa-regular fa-copy"></i> Copy Script
+                            </button>
+                            <button onclick="openPartnerTool('elevenlabs')" class="px-3 py-1.5 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-lg shadow-md transition-all flex items-center gap-1.5">
+                                🎙️ Generate AI Voiceover (ElevenLabs)
+                            </button>
+                        </div>
                     </div>
                     <div class="bg-gray-950/90 p-4 sm:p-5 rounded-xl border border-gray-800 overflow-x-auto">
                         <pre id="res-full-script" class="text-xs sm:text-sm text-gray-200 whitespace-pre-wrap font-mono leading-relaxed">Script content...</pre>
@@ -552,9 +572,14 @@ function renderResults(res) {
                         <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                             <i class="fa-solid fa-file-text"></i> Monetization SEO Description
                         </h4>
-                        <button onclick="copyToClipboard(document.getElementById('res-seo-desc').innerText)" class="px-2.5 py-1 text-xs bg-gray-800 hover:bg-emerald-600 text-gray-300 hover:text-white rounded-md transition-colors">
-                            <i class="fa-regular fa-copy"></i> Copy
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="copyToClipboard(document.getElementById('res-seo-desc').innerText)" class="px-2.5 py-1 text-xs bg-gray-800 hover:bg-emerald-600 text-gray-300 hover:text-white rounded-md transition-colors">
+                                <i class="fa-regular fa-copy"></i> Copy
+                            </button>
+                            <button onclick="openPartnerTool('vidiq')" class="px-2.5 py-1 text-xs bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white rounded-md transition-colors font-semibold">
+                                📈 Boost Rank with VidIQ
+                            </button>
+                        </div>
                     </div>
                     <pre id="res-seo-desc" class="p-3.5 bg-gray-950/90 rounded-xl border border-gray-800 text-xs text-gray-300 whitespace-pre-wrap font-sans">Description...</pre>
                 </div>
@@ -666,7 +691,7 @@ function renderResults(res) {
                         </div>
                         <div class="pt-1.5 text-[11px] text-purple-300 font-mono bg-gray-900/60 p-2 rounded border border-gray-800 flex items-center justify-between gap-2">
                             <span class="truncate">Midjourney: "${escapeHtml(imgPrompt)}"</span>
-                            <button onclick="copyEncoded('${encodedImg}')" class="px-2 py-0.5 bg-gray-800 hover:bg-purple-600 text-gray-300 hover:text-white rounded text-[10px] flex-shrink-0">
+                            <button onclick="copyEncoded('${encodedImg}')" class="px-2 py-0.5 bg-gray-800 hover:bg-purple-600 text-gray-300 hover:text-white rounded text-[10px]">
                                 <i class="fa-regular fa-copy"></i> Copy
                             </button>
                         </div>
