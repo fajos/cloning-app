@@ -9,6 +9,7 @@ const PARTNER_LINKS = {
 };
 
 // Explicitly assign to window so inline onclick handlers never fail
+window.toggleModal = toggleModal;
 window.toggleNicheExplorer = toggleNicheExplorer;
 window.switchNicheCategory = switchNicheCategory;
 window.searchCustomNiche = searchCustomNiche;
@@ -16,6 +17,18 @@ window.launchNicheChannel = launchNicheChannel;
 window.cloneChannelUrl = cloneChannelUrl;
 window.generateScriptForTopic = generateScriptForTopic;
 window.openPartnerTool = openPartnerTool;
+
+function toggleModal(modalId, show) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    if (show) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // Bind Explore Niches Button directly
