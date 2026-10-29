@@ -43,11 +43,15 @@ fun App() {
         var aiProvider by remember { mutableStateOf("deepseek") }
         var deepseekApiKey by remember { mutableStateOf("") }
         var geminiApiKey by remember { mutableStateOf("") }
-        var serverUrl by remember { mutableStateOf("http://10.0.2.2:8000") }
 
         var selectedFormat by remember { mutableStateOf("Shorts") }
         var selectedTone by remember { mutableStateOf("Punchy & Viral") }
         var showSettings by remember { mutableStateOf(false) }
+        var isSystemReady by remember { mutableStateOf(true) }
+
+        LaunchedEffect(Unit) {
+            isSystemReady = ApiClient.checkHealth()
+        }
 
         Scaffold(
             topBar = {
@@ -89,8 +93,33 @@ fun App() {
                         }
                     },
                     actions = {
+                        Surface(
+                            color = if (isSystemReady) Color(0xFF10B981).copy(alpha = 0.15f) else Color(0xFFEF4444).copy(alpha = 0.15f),
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isSystemReady) Color(0xFF10B981).copy(alpha = 0.3f) else Color(0xFFEF4444).copy(alpha = 0.3f)),
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .background(if (isSystemReady) Color(0xFF34D399) else Color(0xFFF87171))
+                                )
+                                Text(
+                                    text = if (isSystemReady) "System Ready" else "Connecting...",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isSystemReady) Color(0xFF34D399) else Color(0xFFF87171)
+                                )
+                            }
+                        }
                         TextButton(onClick = { showSettings = true }) {
-                            Text("⚙️ Settings", color = TextWhite, fontSize = 12.sp)
+                            Text("⚙️", color = TextWhite, fontSize = 14.sp)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
@@ -195,7 +224,6 @@ fun App() {
 
                                 uiState = UiState.Loading
                                 scope.launch {
-                                    ApiClient.setServerUrl(serverUrl)
                                     val req = AnalyzeRequest(
                                         youtubeUrl = youtubeUrl,
                                         apiKey = apiKey,
@@ -288,14 +316,6 @@ fun App() {
                             value = if (aiProvider == "deepseek") deepseekApiKey else geminiApiKey,
                             onValueChange = { if (aiProvider == "deepseek") deepseekApiKey = it else geminiApiKey = it },
                             label = { Text("API Key ($aiProvider)", fontSize = 11.sp) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
-
-                        OutlinedTextField(
-                            value = serverUrl,
-                            onValueChange = { serverUrl = it },
-                            label = { Text("Backend Server URL", fontSize = 11.sp) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )

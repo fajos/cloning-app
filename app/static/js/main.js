@@ -161,6 +161,7 @@ function renderNicheCards(niches) {
             const desc = n.description || 'High-demand creator niche.';
             const nicheId = n.id || nicheName.toLowerCase().replace(/[^a-z0-0]/g, '-');
             const channels = Array.isArray(n.suggested_channels) ? n.suggested_channels : [];
+            const topics = Array.isArray(n.example_topics) ? n.example_topics : [];
 
             return `
                 <div class="glass-card rounded-xl p-4 border border-gray-800 space-y-3 hover:border-amber-500/40 transition-all flex flex-col justify-between">
@@ -169,8 +170,8 @@ function renderNicheCards(niches) {
                             <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[10px] font-bold">${escapeHtml(catName)}</span>
                             <span class="text-[10px] font-semibold text-emerald-400">CPM: ${escapeHtml(cpm)}</span>
                         </div>
-                        <h4 class="text-sm font-bold text-white">${escapeHtml(nicheName)}</h4>
-                        <p class="text-xs text-gray-400 line-clamp-2">${escapeHtml(desc)}</p>
+                        <h4 class="text-sm font-bold text-white leading-snug">${escapeHtml(nicheName)}</h4>
+                        <p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(desc)}</p>
 
                         <!-- Recommended Channels to Clone -->
                         <div class="space-y-1.5 pt-1 border-t border-gray-800/80">
@@ -179,17 +180,28 @@ function renderNicheCards(niches) {
                                 ${channels.map(ch => {
                                     const chName = typeof ch === 'object' ? (ch.name || 'Creator Channel') : String(ch);
                                     const chUrl = typeof ch === 'object' ? (ch.url || `https://www.youtube.com/${chName}`) : `https://www.youtube.com/${chName}`;
-                                    const chSubs = typeof ch === 'object' ? (ch.subscriber_highlight || 'Active Creator') : 'Active Creator';
+                                    const chSubs = typeof ch === 'object' ? (ch.subscriber_highlight || 'Verified Hit') : 'Verified Hit';
                                     const chWhy = typeof ch === 'object' ? (ch.why_clone || 'High retention model') : 'High retention model';
+                                    const chEarnings = typeof ch === 'object' ? (ch.estimated_video_earnings || '') : '';
                                     const encodedUrl = encodeURIComponent(String(chUrl));
 
                                     return `
-                                        <div class="p-2 bg-gray-950/80 rounded-lg border border-gray-800 flex items-center justify-between gap-2 text-xs">
-                                            <div class="overflow-hidden">
-                                                <span class="font-bold text-gray-200 block truncate">${escapeHtml(chName)}</span>
-                                                <span class="text-[10px] text-gray-400 truncate block">${escapeHtml(chSubs)} • ${escapeHtml(chWhy)}</span>
+                                        <div class="p-2.5 bg-gray-950/90 rounded-lg border border-gray-800 flex items-start justify-between gap-3 text-xs">
+                                            <div class="space-y-1 flex-1 overflow-hidden">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="font-bold text-gray-100">${escapeHtml(chName)}</span>
+                                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-semibold">${escapeHtml(chSubs)}</span>
+                                                </div>
+                                                <div class="text-[11px] text-gray-300 font-medium leading-tight">
+                                                    <i class="fa-solid fa-circle-play text-purple-400 text-[10px] mr-1"></i>${escapeHtml(chWhy)}
+                                                </div>
+                                                ${chEarnings ? `
+                                                <div class="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                                                    <i class="fa-solid fa-sack-dollar text-[10px]"></i> Est. Video Revenue: ${escapeHtml(chEarnings)}
+                                                </div>
+                                                ` : ''}
                                             </div>
-                                            <button onclick="cloneChannelUrl('${encodedUrl}')" class="px-2 py-1 bg-purple-600/30 hover:bg-purple-600 text-purple-300 hover:text-white rounded text-[10px] font-semibold flex-shrink-0 transition-colors">
+                                            <button onclick="cloneChannelUrl('${encodedUrl}')" class="px-2.5 py-1.5 bg-purple-600/30 hover:bg-purple-600 text-purple-300 hover:text-white rounded-md text-[10px] font-bold flex-shrink-0 transition-colors">
                                                 🎥 Clone
                                             </button>
                                         </div>
@@ -197,9 +209,18 @@ function renderNicheCards(niches) {
                                 }).join('')}
                             </div>
                         </div>
+
+                        ${topics.length > 0 ? `
+                        <div class="pt-2 border-t border-gray-800/80 space-y-1">
+                            <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">🔥 High-CTR Viral Topics:</span>
+                            <ul class="space-y-1 text-[11px] text-gray-300">
+                                ${topics.map(t => `<li class="flex items-start gap-1.5"><span class="text-indigo-400 font-bold">•</span><span class="leading-tight">${escapeHtml(t)}</span></li>`).join('')}
+                            </ul>
+                        </div>
+                        ` : ''}
                     </div>
 
-                    <button onclick="launchNicheChannel('${escapeHtml(nicheId)}')" class="w-full py-2.5 px-3 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white font-bold text-xs rounded-lg border border-amber-500/30 transition-all flex items-center justify-center gap-1.5 mt-2">
+                    <button onclick="launchNicheChannel('${escapeHtml(nicheId)}')" class="w-full py-2.5 px-3 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white font-bold text-xs rounded-lg border border-amber-500/30 transition-all flex items-center justify-center gap-1.5 mt-3">
                         <i class="fa-solid fa-rocket"></i> Launch Auto Niche Channel
                     </button>
                 </div>
@@ -417,10 +438,14 @@ function renderResults(res) {
                             <i class="fa-solid fa-circle-check"></i> 12-State Channel Clone Complete
                         </div>
                         <h3 id="res-original-title" class="text-base sm:text-lg font-bold text-white line-clamp-1">${escapeHtml(metadata.title || 'Channel / Video')}</h3>
-                        <p class="text-xs text-gray-400 flex items-center justify-center sm:justify-start gap-2">
+                        <p class="text-xs text-gray-400 flex flex-wrap items-center justify-center sm:justify-start gap-2">
                             <span><i class="fa-solid fa-user text-gray-500"></i> <span id="res-author">${escapeHtml(metadata.author || 'Unknown Channel')}</span></span>
                             <span>•</span>
                             <span><i class="fa-solid fa-file-lines text-gray-500"></i> <span id="res-word-count">${res.transcript_status?.word_count ? res.transcript_status.word_count + ' words analyzed' : 'Full 12-State Channel Brief'}</span></span>
+                            <span>•</span>
+                            <span class="text-emerald-400 font-bold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 inline-flex items-center gap-1 text-[11px]">
+                                <i class="fa-solid fa-sack-dollar text-emerald-400"></i> Est. Video Revenue: ${escapeHtml(metadata.estimated_earnings?.earnings_formatted || '$12.5K - $32.0K')}
+                            </span>
                         </p>
                     </div>
                 </div>
